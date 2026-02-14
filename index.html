@@ -7,15 +7,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Betting Tracker">
     <title>Betting Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-
-        /* iOS safe area variables with fallbacks */
         :root{
-            --sat:env(safe-area-inset-top,0px);
-            --sab:env(safe-area-inset-bottom,0px);
-            --sal:env(safe-area-inset-left,0px);
-            --sar:env(safe-area-inset-right,0px);
+            --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+            --sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);
             --bg:#0d0d0d;--card:#181818;--card2:#222;--border:#2a2a2a;
             --accent:#00e676;--accent2:#00c853;--accent-dim:rgba(0,230,118,.12);
             --text:#f0f0f0;--text2:#888;--text3:#555;
@@ -23,28 +20,23 @@
         }
         html,body{min-height:100%;font-family:'Courier New',monospace;background:var(--bg);color:var(--text);overflow-x:hidden}
         .app{min-height:100%;display:flex;flex-direction:column}
-
-        /* HEADER - sticky for all browsers */
         .hdr{background:var(--card);padding:12px 14px;padding-top:calc(12px + var(--sat));padding-left:calc(14px + var(--sal));padding-right:calc(14px + var(--sar));border-bottom:2px solid var(--accent);display:flex;justify-content:space-between;align-items:center;position:-webkit-sticky;position:sticky;top:0;z-index:100}
         .hdr h1{font-size:15px;letter-spacing:2px;font-weight:bold}
         .hdr-r{display:flex;gap:6px;align-items:center}
         .hdr-btn{padding:4px 8px;border-radius:3px;font-size:10px;font-weight:bold;font-family:'Courier New',monospace;cursor:pointer;letter-spacing:.5px;border:1px solid var(--accent);background:transparent;color:var(--accent)}
         .hdr-btn.on{background:var(--accent);color:var(--bg)}
-
-        /* CONTENT - natural scroll, padding for fixed nav */
         .main{flex:1;padding:12px;padding-left:calc(12px + var(--sal));padding-right:calc(12px + var(--sar));padding-bottom:calc(100px + var(--sab))}
         .tab{display:none;animation:fadeIn .15s ease-in}.tab.on{display:block}
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-        /* STATS GRID */
+        /* STATS */
         .sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
         .sc{background:var(--card);padding:10px;border-radius:6px;text-align:center;border:1px solid var(--border)}
         .sc.w{border-color:var(--win)}.sc.l{border-color:var(--loss)}.sc.a{border-color:var(--accent)}
         .sc-l{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
         .sc-v{font-size:17px;font-weight:bold;color:var(--accent)}
         .sc.l .sc-v{color:var(--loss)}.sc.w .sc-v{color:var(--win)}
-
-        /* SECTION BOX */
+        .sc-sub{font-size:9px;color:var(--text3);margin-top:2px}
         .box{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:12px}
         .box h3{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
 
@@ -54,13 +46,9 @@
         input,select,textarea{width:100%;padding:10px;background:var(--card);border:1px solid var(--border);color:var(--text);font-family:'Courier New',monospace;border-radius:4px;font-size:14px}
         input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 4px rgba(0,230,118,.2)}
         .fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-
-        /* DATE ROW */
         .date-row{display:flex;gap:6px;align-items:flex-end}
         .date-row input{flex:1}
         .btn-t{background:var(--card2);color:var(--accent);border:1px solid var(--accent);padding:10px 8px;font-size:10px;white-space:nowrap;border-radius:4px;font-family:'Courier New',monospace;font-weight:bold;cursor:pointer}
-
-        /* RESULT BUTTONS */
         .result-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
         .result-btn{padding:10px 4px;border-radius:5px;font-size:10px;font-weight:bold;font-family:'Courier New',monospace;cursor:pointer;text-align:center;border:2px solid transparent;transition:all .12s;letter-spacing:.3px;text-transform:uppercase}
         .result-btn.rb-pending{background:rgba(255,171,0,.1);color:var(--pending);border-color:rgba(255,171,0,.3)}
@@ -74,7 +62,6 @@
         .result-btn.rb-loss.sel{background:var(--loss);color:#fff;border-color:var(--loss)}
         .result-btn.rb-push.sel{background:var(--push);color:#fff;border-color:var(--push)}
         .result-btn.rb-cash.sel{background:var(--cash);color:#fff;border-color:var(--cash)}
-
         .btn-submit{width:100%;padding:14px;font-size:14px;border-radius:6px;margin-top:6px;background:var(--accent);color:var(--bg);border:none;font-weight:bold;font-family:'Courier New',monospace;letter-spacing:1px;cursor:pointer;text-transform:uppercase}
         .btn-submit:active{transform:scale(.97);opacity:.9}
 
@@ -88,7 +75,7 @@
         .date-filter-row span{color:var(--text2);font-size:11px;white-space:nowrap}
         .btn-clear-date{background:none;border:1px solid var(--text3);color:var(--text2);padding:8px 10px;border-radius:4px;font-size:10px;cursor:pointer;font-family:'Courier New',monospace}
 
-        .bc{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--border);padding:12px;margin-bottom:8px;border-radius:6px}
+        .bc{background:var(--card);border:1px solid var(--border);border-left:4px solid var(--border);padding:12px;margin-bottom:8px;border-radius:6px;position:relative}
         .bc.win{border-left-color:var(--win)}.bc.loss{border-left-color:var(--loss)}.bc.pending{border-left-color:var(--pending)}.bc.push{border-left-color:var(--push)}.bc.cash{border-left-color:var(--cash)}
         .bc-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
         .bc-d{font-size:10px;color:var(--text2)}
@@ -99,7 +86,7 @@
         .bc-p{font-size:14px;font-weight:bold;color:var(--win)}.bc-p.neg{color:var(--loss)}
         .bc-a{display:flex;gap:6px;margin-top:8px}
         .bc-a button{flex:1;padding:8px;font-size:10px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;font-family:'Courier New',monospace;color:#fff}
-        .bc-a .be{background:#2d5a3a}.bc-a .bd{background:#5a2d2d}
+        .bc-a .be{background:#2d5a3a}.bc-a .bd{background:#5a2d2d}.bc-a .bs{background:#2d3d5a}
 
         /* QUICK SETTLE */
         .qs{display:flex;gap:5px;margin-top:8px}
@@ -107,8 +94,6 @@
         .qs button:active{transform:scale(.95)}
         .qs .qs-w{background:var(--win);color:#000}.qs .qs-l{background:var(--loss);color:#fff}
         .qs .qs-p{background:var(--push);color:#fff}.qs .qs-c{background:var(--cash);color:#fff}
-
-        /* INLINE CASHOUT */
         .co-inline{margin-top:8px;padding:10px;background:var(--card2);border:1px solid var(--cash);border-radius:6px;animation:fadeIn .15s ease-in}
         .co-inline label{font-size:10px;color:var(--cash);margin-bottom:4px}
         .co-inline input{padding:10px;font-size:14px;background:var(--card);border:1px solid var(--cash);color:var(--text);border-radius:4px;font-family:'Courier New',monospace;margin-bottom:8px}
@@ -118,19 +103,22 @@
         .co-confirm{background:var(--cash);color:#fff}
         .co-cancel{background:var(--card);color:var(--text2);border:1px solid var(--border)}
 
-        /* CHART TABS */
+        /* CHARTS */
         .ct{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap}
         .ctb{background:var(--card);color:var(--text2);border:1px solid var(--border);padding:5px 9px;border-radius:20px;cursor:pointer;font-size:10px;font-family:'Courier New',monospace}
         .ctb.on{background:var(--accent);color:var(--bg);border-color:var(--accent)}
-
         .sport-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:11px}
         .sport-row:last-child{border-bottom:none}
         .sr-vals{display:flex;gap:10px;font-size:10px}
 
-        /* LAST 10 FILTERS */
-        .l10-filters{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
-        .l10-btn{background:var(--card2);color:var(--text2);border:1px solid var(--border);padding:4px 8px;border-radius:12px;cursor:pointer;font-size:9px;font-family:'Courier New',monospace}
-        .l10-btn.on{background:var(--accent-dim);color:var(--accent);border-color:var(--accent)}
+        /* TIER */
+        .tier-card{background:var(--card2);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px}
+        .tier-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+        .tier-name{font-size:12px;font-weight:bold;letter-spacing:.5px}
+        .tier-range{font-size:9px;color:var(--text2)}
+        .tier-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center}
+        .tier-stat{font-size:9px;color:var(--text2)}
+        .tier-val{font-size:13px;font-weight:bold}
 
         /* NAV */
         .nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:2px solid var(--accent);display:flex;justify-content:space-around;align-items:center;padding:6px 0;padding-bottom:calc(6px + var(--sab));padding-left:var(--sal);padding-right:var(--sar);z-index:1000;flex-shrink:0}
@@ -150,35 +138,40 @@
         .uc{display:flex;gap:8px;align-items:center;margin-bottom:6px}
         .uc label{margin-bottom:0;white-space:nowrap}
         .uc input{width:110px;text-align:center}
-
-        /* EMPTY */
         .empty{text-align:center;color:var(--text3);padding:40px 20px;font-size:12px}
         .empty .ei{font-size:36px;margin-bottom:10px}
-
-        /* TOAST */
         .toast{position:fixed;bottom:calc(80px + var(--sab));left:14px;right:14px;background:var(--accent);color:var(--bg);padding:10px 14px;border-radius:4px;font-weight:bold;font-size:12px;animation:su .25s ease-out;z-index:2000}
         @keyframes su{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
-
         ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:4px}
-
-        /* Progress bars */
         .prog-wrap{margin-bottom:10px}
         .prog-head{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
         .prog-bar{background:var(--card2);height:6px;border-radius:3px;overflow:hidden}
         .prog-fill{height:100%;border-radius:3px;transition:width .4s}
 
-        /* iOS older constant() fallback */
-        @supports(padding: constant(safe-area-inset-top)){
+        /* Share card clone styling */
+        .share-card{background:var(--bg);padding:16px;border:2px solid var(--accent);border-radius:10px;width:340px;font-family:'Courier New',monospace;color:var(--text)}
+        .share-card .sh-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--accent)}
+        .share-card .sh-brand{font-size:10px;color:var(--accent);font-weight:bold;letter-spacing:2px}
+        .share-card .sh-date{font-size:10px;color:var(--text2)}
+        .share-card .sh-bet{font-size:16px;font-weight:bold;margin-bottom:8px}
+        .share-card .sh-details{font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:8px}
+        .share-card .sh-result{display:inline-block;padding:4px 12px;border-radius:4px;font-size:12px;font-weight:bold}
+        .share-card .sh-profit{font-size:18px;font-weight:bold;margin-top:8px}
+
+        /* Sharing overlay */
+        .share-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);z-index:3000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s}
+        .share-overlay img{max-width:100%;border-radius:10px;margin-bottom:16px;box-shadow:0 4px 20px rgba(0,230,118,.2)}
+        .share-overlay .so-btns{display:flex;gap:10px}
+        .share-overlay button{padding:12px 24px;border:none;border-radius:6px;font-family:'Courier New',monospace;font-weight:bold;font-size:13px;cursor:pointer}
+        .share-overlay .so-share{background:var(--accent);color:var(--bg)}
+        .share-overlay .so-close{background:var(--card);color:var(--text2);border:1px solid var(--border)}
+
+        @supports(padding:constant(safe-area-inset-top)){
             .hdr{padding-top:calc(10px + constant(safe-area-inset-top))}
             .nav{padding-bottom:calc(6px + constant(safe-area-inset-bottom))}
             .main{padding-bottom:calc(100px + constant(safe-area-inset-bottom))}
         }
-
-        /* iOS input zoom prevention */
-        @supports(-webkit-touch-callout:none){
-            input,select,textarea{font-size:16px!important}
-        }
-
+        @supports(-webkit-touch-callout:none){input,select,textarea{font-size:16px!important}}
         @media(max-width:360px){.hdr h1{font-size:12px}.result-grid{grid-template-columns:repeat(3,1fr)}}
     </style>
 </head>
@@ -194,17 +187,20 @@
     </div>
 
     <div class="main" id="main">
-
         <!-- STATS -->
         <div id="statsTab" class="tab on">
             <div class="sg">
                 <div class="sc a"><div class="sc-l" data-t="sBets">BETS</div><div class="sc-v" id="sTotalBets">0</div></div>
-                <div class="sc w"><div class="sc-l" data-t="sWR">WIN RATE</div><div class="sc-v" id="sWinRate">0%</div></div>
+                <div class="sc w"><div class="sc-l" data-t="sWR">WIN RATE</div><div class="sc-v" id="sWinRate">0%</div><div class="sc-sub" id="sWWR"></div></div>
                 <div class="sc w"><div class="sc-l" data-t="sWon">WON</div><div class="sc-v" id="sWon">0</div></div>
                 <div class="sc l"><div class="sc-l" data-t="sLost">LOST</div><div class="sc-v" id="sLost">0</div></div>
                 <div class="sc a"><div class="sc-l">ROI</div><div class="sc-v" id="sRoi">0%</div></div>
                 <div class="sc"><div class="sc-l" data-t="sNet">NET</div><div class="sc-v" id="sNet">0</div></div>
+                <div class="sc" style="grid-column:1/-1"><div class="sc-l" data-t="sStaked">TOTAL STAKED</div><div class="sc-v" id="sStaked">0</div></div>
             </div>
+
+            <!-- TIER BREAKDOWN -->
+            <div id="tierSection"></div>
 
             <div class="box">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -220,49 +216,19 @@
         <!-- ADD -->
         <div id="addTab" class="tab">
             <form onsubmit="addBet(event)" autocomplete="off">
-                <div class="fg">
-                    <label data-t="fBet">BET</label>
-                    <input type="text" id="fBet" placeholder="e.g. Lakers ML" required>
+                <div class="fg"><label data-t="fBet">BET</label><input type="text" id="fBet" placeholder="e.g. Lakers ML" required></div>
+                <div class="fr">
+                    <div class="fg"><label data-t="fDate">DATE</label><div class="date-row"><input type="text" id="fDate" placeholder="dd/mm/yy" inputmode="numeric" maxlength="8" required><button type="button" class="btn-t" onclick="fillToday()" data-t="fToday">HOY</button></div></div>
+                    <div class="fg"><label id="fStakeLabel" data-t="fStake">STAKE</label><input type="text" id="fStake" inputmode="decimal" placeholder="1.5" required></div>
                 </div>
                 <div class="fr">
-                    <div class="fg">
-                        <label data-t="fDate">DATE</label>
-                        <div class="date-row">
-                            <input type="text" id="fDate" placeholder="dd/mm/yy" inputmode="numeric" maxlength="8" required>
-                            <button type="button" class="btn-t" onclick="fillToday()" data-t="fToday">HOY</button>
-                        </div>
-                    </div>
-                    <div class="fg">
-                        <label id="fStakeLabel" data-t="fStake">STAKE</label>
-                        <input type="text" id="fStake" inputmode="decimal" placeholder="1.5" required>
-                    </div>
+                    <div class="fg"><label data-t="fOdds">ODDS</label><input type="text" id="fOdds" inputmode="decimal" placeholder="1.90" required></div>
+                    <div class="fg"><label data-t="fSport">SPORT</label><select id="fSport"></select></div>
                 </div>
                 <div class="fr">
-                    <div class="fg">
-                        <label data-t="fOdds">ODDS</label>
-                        <input type="text" id="fOdds" inputmode="decimal" placeholder="1.90" required>
-                    </div>
-                    <div class="fg">
-                        <label data-t="fSport">SPORT</label>
-                        <select id="fSport"></select>
-                    </div>
+                    <div class="fg"><label data-t="fType">TYPE</label><select id="fType"><option value="Single">Single</option><option value="Parlay">Parlay</option><option value="Player Prop">Player Prop</option><option value="Live">Live</option><option value="Futures">Futures</option></select></div>
+                    <div class="fg" style="display:flex;flex-direction:column"><label>&nbsp;</label></div>
                 </div>
-                <div class="fr">
-                    <div class="fg">
-                        <label data-t="fType">TYPE</label>
-                        <select id="fType">
-                            <option value="Single">Single</option>
-                            <option value="Parlay">Parlay</option>
-                            <option value="Player Prop">Player Prop</option>
-                            <option value="Live">Live</option>
-                            <option value="Futures">Futures</option>
-                        </select>
-                    </div>
-                    <div class="fg" style="display:flex;flex-direction:column">
-                        <label>&nbsp;</label>
-                    </div>
-                </div>
-
                 <div class="fg">
                     <label data-t="fResult">RESULT</label>
                     <div class="result-grid" id="resultGrid">
@@ -274,23 +240,17 @@
                     </div>
                     <input type="hidden" id="fResult" value="Pending">
                 </div>
-
                 <div id="cashField" class="fg" style="display:none;animation:fadeIn .15s ease-in">
                     <label data-t="fCash">CASH OUT AMOUNT ($)</label>
                     <input type="number" id="fCash" placeholder="Enter amount received..." inputmode="decimal">
                     <div style="font-size:10px;color:var(--text2);margin-top:3px" id="cashHint"></div>
                 </div>
-
-                <div class="fg">
-                    <label data-t="fNotes">NOTES</label>
-                    <textarea id="fNotes" placeholder="Optional..." rows="2"></textarea>
-                </div>
-
+                <div class="fg"><label data-t="fNotes">NOTES</label><textarea id="fNotes" placeholder="Optional..." rows="2"></textarea></div>
                 <button type="submit" class="btn-submit" id="submitBtn">⚡ ADD BET</button>
             </form>
         </div>
 
-        <!-- HISTORY -->
+        <!-- BETS (History) -->
         <div id="historyTab" class="tab">
             <div class="hist-toolbar">
                 <div class="filters" id="histFilters">
@@ -319,6 +279,7 @@
                 <button class="ctb" onclick="chartView('monthly',this)" data-t="cMonth">MONTHLY</button>
                 <button class="ctb" onclick="chartView('winrate',this)" data-t="cWR">WIN%</button>
                 <button class="ctb" onclick="chartView('odds',this)" data-t="cOdds">ODDS</button>
+                <button class="ctb" onclick="chartView('tiers',this)">TIERS</button>
             </div>
             <div id="chartArea"></div>
         </div>
@@ -328,12 +289,14 @@
             <div class="mm">
                 <div class="mc">
                     <h3>💰 UNIT SIZE</h3>
-                    <div class="uc">
-                        <label>1 Unit =</label>
-                        <input type="number" id="unitInput" value="10000" min="1" onchange="saveUnit()">
-                        <span id="unitCurrLabel" style="color:var(--text2);font-size:11px">ARS</span>
-                    </div>
+                    <div class="uc"><label>1 Unit =</label><input type="number" id="unitInput" value="10000" min="1" onchange="saveUnit()"><span id="unitCurrLabel" style="color:var(--text2);font-size:11px">ARS</span></div>
                     <div style="font-size:11px;color:var(--text2)" id="unitDisplay">1u = $10.000 ARS</div>
+                </div>
+                <div class="mc">
+                    <h3>📊 TIERS</h3>
+                    <div style="font-size:10px;color:var(--text2);margin-bottom:8px" data-t="tierDesc">Stake thresholds (units)</div>
+                    <div class="uc"><label>Small &lt;</label><input type="number" id="tierSmall" value="1.5" step="0.1" onchange="saveTiers()"><label>Med &lt;</label><input type="number" id="tierMed" value="3" step="0.1" onchange="saveTiers()"></div>
+                    <div style="font-size:9px;color:var(--text3)">Small: &lt;1.5u | Medium: 1.5-3u | Big: &gt;3u</div>
                 </div>
                 <div class="mc">
                     <h3>📊 DATA</h3>
@@ -342,33 +305,25 @@
                     <button onclick="document.getElementById('importFile').click()">Import</button>
                     <input type="file" id="importFile" accept=".json" style="display:none" onchange="processImport()">
                 </div>
-                <div class="mc">
-                    <h3>⚙️</h3>
-                    <button onclick="clearAll()" style="background:var(--loss)">Clear All Data</button>
-                </div>
-                <div class="mc">
-                    <h3>ℹ️</h3>
-                    <div style="font-size:11px;color:var(--text2);text-align:center">
-                        <p>Betting Tracker</p>
-                        <p style="margin-top:6px;font-style:italic">puto el que lee</p>
-                    </div>
-                </div>
+                <div class="mc"><h3>⚙️</h3><button onclick="clearAll()" style="background:var(--loss)">Clear All Data</button></div>
+                <div class="mc"><h3>ℹ️</h3><div style="font-size:11px;color:var(--text2);text-align:center"><p>Betting Tracker</p><p style="margin-top:6px;font-style:italic">puto el que lee</p></div></div>
             </div>
         </div>
     </div>
 
-    <!-- NAV -->
     <div class="nav">
         <button class="nb on" onclick="goTab('statsTab',this)"><span class="ni">📊</span><span>STATS</span></button>
-        <button class="nb" onclick="goTab('historyTab',this)"><span class="ni">📋</span><span>HISTORY</span><span class="badge" id="pendBadge" style="display:none">0</span></button>
+        <button class="nb" onclick="goTab('historyTab',this)"><span class="ni">🎯</span><span>BETS</span><span class="badge" id="pendBadge" style="display:none">0</span></button>
         <button class="nb add-btn" onclick="goTab('addTab',this)"><div class="add-circle">+</div><span>ADD</span></button>
         <button class="nb" onclick="goTab('chartsTab',this)"><span class="ni">📈</span><span>CHARTS</span></button>
         <button class="nb" onclick="goTab('moreTab',this)"><span class="ni">⋮</span><span>MORE</span></button>
     </div>
 </div>
 
+<!-- Hidden share card template -->
+<div id="shareContainer" style="position:fixed;left:-9999px;top:0"></div>
+
 <script>
-// ========== CONFIG ==========
 const SPORTS=[
     {id:'NFL',en:'NFL',es:'NFL'},{id:'NBA',en:'NBA',es:'NBA'},{id:'MLB',en:'MLB',es:'MLB'},
     {id:'NHL',en:'NHL',es:'NHL'},{id:'Soccer',en:'Soccer',es:'Fútbol'},{id:'Tennis',en:'Tennis',es:'Tenis'},
@@ -380,28 +335,31 @@ const SPORTS=[
 ];
 
 const TX={
-    EN:{sBets:'BETS',sWR:'WIN RATE',sWon:'WON',sLost:'LOST',sNet:'NET',sLast:'RECENT',
+    EN:{sBets:'BETS',sWR:'WIN RATE',sWon:'WON',sLost:'LOST',sNet:'NET',sLast:'RECENT',sStaked:'TOTAL STAKED',
         fBet:'BET',fDate:'DATE',fStake:'STAKE',fOdds:'ODDS',fSport:'SPORT',fType:'TYPE',fResult:'RESULT',fCash:'CASH OUT AMOUNT',fNotes:'NOTES',fToday:'TODAY',
         submitAdd:'⚡ ADD BET',submitEdit:'✏️ UPDATE',
         cSport:'SPORT',cMonth:'MONTHLY',cWR:'WIN%',cOdds:'ODDS',
         addOk:'Bet added ✓',editOk:'Updated ✓',delAsk:'Delete this bet?',delOk:'Deleted ✓',
         clearAsk:'Delete ALL data?',clearOk:'Cleared ✓',expOk:'Exported ✓',impOk:'Imported ✓',impErr:'Import error',
-        chartEmpty:'Settle bets to see charts'},
-    ES:{sBets:'APUESTAS',sWR:'% VICTORIA',sWon:'GANADO',sLost:'PERDIDO',sNet:'NETO',sLast:'RECIENTES',
+        chartEmpty:'Settle bets to see charts',tierDesc:'Stake thresholds (units)',
+        wwr:'Weighted'},
+    ES:{sBets:'APUESTAS',sWR:'% VICTORIA',sWon:'GANADO',sLost:'PERDIDO',sNet:'NETO',sLast:'RECIENTES',sStaked:'TOTAL APOSTADO',
         fBet:'APUESTA',fDate:'FECHA',fStake:'STAKE',fOdds:'CUOTAS',fSport:'DEPORTE',fType:'TIPO',fResult:'RESULTADO',fCash:'MONTO CASH OUT',fNotes:'NOTAS',fToday:'HOY',
         submitAdd:'⚡ AGREGAR',submitEdit:'✏️ ACTUALIZAR',
         cSport:'DEPORTE',cMonth:'MENSUAL',cWR:'WIN%',cOdds:'CUOTAS',
         addOk:'Agregada ✓',editOk:'Actualizada ✓',delAsk:'¿Eliminar?',delOk:'Eliminada ✓',
         clearAsk:'¿Eliminar TODO?',clearOk:'Eliminado ✓',expOk:'Exportado ✓',impOk:'Importado ✓',impErr:'Error',
-        chartEmpty:'Resolvé apuestas para ver gráficos'}
+        chartEmpty:'Resolvé apuestas para ver gráficos',tierDesc:'Umbrales de stake (unidades)',
+        wwr:'Ponderado'}
 };
 
-// ========== STATE ==========
 let lang=ls('btLang')||'ES';
 let bets=JSON.parse(ls('btData')||'[]');
 let unit=parseFloat(ls('btUnit'))||10000;
-let mode=ls('btMode')||'unit'; // 'unit' or 'amount'
-let curr=ls('btCurr')||'ARS';  // 'ARS' or 'USD'
+let mode=ls('btMode')||'unit';
+let curr=ls('btCurr')||'ARS';
+let tierSmall=parseFloat(ls('btTierS'))||1.5;
+let tierMed=parseFloat(ls('btTierM'))||3;
 let editId=null;
 let hFilterVal='All';
 let chartMode='cumulative';
@@ -410,151 +368,73 @@ function ls(k,v){if(v===undefined)return localStorage.getItem(k);localStorage.se
 function t(k){return TX[lang][k]||k}
 function sportLabel(id){const s=SPORTS.find(x=>x.id===id);return s?(lang==='ES'?s.es:s.en):id}
 
-// ========== DISPLAY ==========
 function fmtNum(n){
     if(curr==='ARS')return n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
     return n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
-
 function fmtVal(units){
-    if(mode==='amount'){
-        const v=units*unit;
-        return '$'+fmtNum(v);
-    }
+    if(mode==='amount'){return '$'+fmtNum(units*unit)}
     return units.toFixed(2)+'u';
 }
-
 function fmtSigned(units){
     const pfx=units>=0?'+':'';
-    if(mode==='amount'){
-        const v=units*unit;
-        return pfx+'$'+fmtNum(v);
-    }
+    if(mode==='amount'){return pfx+'$'+fmtNum(units*unit)}
     return pfx+units.toFixed(2)+'u';
 }
 
-// ========== MODE / CURRENCY / LANG ==========
-function cycleMode(){
-    mode=mode==='unit'?'amount':'unit';
-    ls('btMode',mode);
-    document.getElementById('modeBtn').textContent=mode==='unit'?'UNIT':'$';
-    document.getElementById('modeBtn').classList.toggle('on',mode==='amount');
-    refresh();
-}
-
-function cycleCurrency(){
-    curr=curr==='ARS'?'USD':'ARS';
-    ls('btCurr',curr);
-    document.getElementById('currBtn').textContent=curr;
-    document.getElementById('unitCurrLabel').textContent=curr;
-    updateUnitDisp();
-    refresh();
-}
-
-function toggleLang(){
-    lang=lang==='ES'?'EN':'ES';
-    ls('btLang',lang);
-    applyTX();
-    refresh();
-}
+function cycleMode(){mode=mode==='unit'?'amount':'unit';ls('btMode',mode);document.getElementById('modeBtn').textContent=mode==='unit'?'UNIT':'$';document.getElementById('modeBtn').classList.toggle('on',mode==='amount');refresh()}
+function cycleCurrency(){curr=curr==='ARS'?'USD':'ARS';ls('btCurr',curr);document.getElementById('currBtn').textContent=curr;document.getElementById('unitCurrLabel').textContent=curr;updateUnitDisp();refresh()}
+function toggleLang(){lang=lang==='ES'?'EN':'ES';ls('btLang',lang);applyTX();refresh()}
 
 function applyTX(){
-    document.querySelectorAll('[data-t]').forEach(el=>{
-        const k=el.getAttribute('data-t');
-        if(TX[lang][k])el.textContent=TX[lang][k];
-    });
+    document.querySelectorAll('[data-t]').forEach(el=>{const k=el.getAttribute('data-t');if(TX[lang][k])el.textContent=TX[lang][k]});
     populateSports();
     document.getElementById('submitBtn').textContent=editId?t('submitEdit'):t('submitAdd');
     updateL10Filter();
 }
-
-function populateSports(){
-    const sel=document.getElementById('fSport');
-    const cur=sel.value;
-    sel.innerHTML=SPORTS.map(s=>`<option value="${s.id}">${lang==='ES'?s.es:s.en}</option>`).join('');
-    if(cur)sel.value=cur;
-}
-
+function populateSports(){const sel=document.getElementById('fSport');const cur=sel.value;sel.innerHTML=SPORTS.map(s=>`<option value="${s.id}">${lang==='ES'?s.es:s.en}</option>`).join('');if(cur)sel.value=cur}
 function refresh(){updateStats();renderHistory();renderCharts()}
 
-// ========== UNIT SIZE ==========
-function saveUnit(){
-    const v=parseFloat(document.getElementById('unitInput').value);
-    if(v>0){unit=v;ls('btUnit',unit);updateUnitDisp();refresh()}
-}
+function saveUnit(){const v=parseFloat(document.getElementById('unitInput').value);if(v>0){unit=v;ls('btUnit',unit);updateUnitDisp();refresh()}}
+function updateUnitDisp(){const f=curr==='ARS'?unit.toLocaleString('es-AR'):unit.toLocaleString('en-US');document.getElementById('unitDisplay').textContent=`1u = $${f} ${curr}`}
+function saveTiers(){tierSmall=parseFloat(document.getElementById('tierSmall').value)||1.5;tierMed=parseFloat(document.getElementById('tierMed').value)||3;ls('btTierS',tierSmall);ls('btTierM',tierMed);refresh()}
 
-function updateUnitDisp(){
-    const f=curr==='ARS'?unit.toLocaleString('es-AR'):unit.toLocaleString('en-US');
-    document.getElementById('unitDisplay').textContent=`1u = $${f} ${curr}`;
-}
+function fillToday(){const d=new Date();document.getElementById('fDate').value=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getFullYear()).slice(-2)}
+function autoFormatDate(inp){let v=inp.value.replace(/[^\d]/g,'');if(v.length>6)v=v.slice(0,6);let f='';for(let i=0;i<v.length;i++){if(i===2||i===4)f+='/';f+=v[i]}inp.value=f}
+function setupDateInput(){const inp=document.getElementById('fDate');inp.addEventListener('input',function(){autoFormatDate(this)});inp.addEventListener('focus',function(){if(!this.value)fillToday()})}
+function parseDate(str){if(!str)return null;const p=str.split('/');if(p.length<3)return null;return new Date((parseInt(p[2])<100?2000+parseInt(p[2]):parseInt(p[2])),parseInt(p[1])-1,parseInt(p[0]))}
 
-// ========== DATE ==========
-function fillToday(){
-    const d=new Date();
-    document.getElementById('fDate').value=
-        String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getFullYear()).slice(-2);
-}
+function goTab(id,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));document.getElementById(id).classList.add('on');btn.classList.add('on');window.scrollTo(0,0);if(id==='chartsTab')renderCharts()}
 
-function autoFormatDate(inp){
-    let v=inp.value.replace(/[^\d]/g,'');
-    if(v.length>6)v=v.slice(0,6);
-    let f='';
-    for(let i=0;i<v.length;i++){if(i===2||i===4)f+='/';f+=v[i]}
-    inp.value=f;
-}
-
-function setupDateInput(){
-    const inp=document.getElementById('fDate');
-    inp.addEventListener('input',function(){autoFormatDate(this)});
-    inp.addEventListener('focus',function(){if(!this.value)fillToday()});
-}
-
-// Parse dd/mm/yy to Date
-function parseDate(str){
-    if(!str)return null;
-    const p=str.split('/');
-    if(p.length<3)return null;
-    const d=parseInt(p[0]),m=parseInt(p[1])-1,y=parseInt(p[2]);
-    const full=y<100?2000+y:y;
-    return new Date(full,m,d);
-}
-
-// ========== TABS ==========
-function goTab(id,btn){
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-    document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-    document.getElementById(id).classList.add('on');
-    btn.classList.add('on');
-    window.scrollTo(0,0);
-    if(id==='chartsTab')renderCharts();
-}
-
-// ========== RESULT BUTTONS ==========
 function pickResult(val,el){
     document.querySelectorAll('#resultGrid .result-btn').forEach(b=>b.classList.remove('sel'));
-    el.classList.add('sel');
-    document.getElementById('fResult').value=val;
-    const cf=document.getElementById('cashField');
-    cf.style.display=val==='Cash Out'?'block':'none';
-    if(val==='Cash Out'){
-        // Show hint with current stake
-        const stakeVal=document.getElementById('fStake').value;
-        const hint=document.getElementById('cashHint');
-        if(stakeVal&&hint){
-            const stakeU=parseFloat(stakeVal.replace(',','.'));
-            const stakeAmt=mode==='amount'?stakeU:(stakeU*unit);
-            hint.textContent=lang==='ES'?`Tu stake: $${fmtNum(stakeAmt)} ${curr}`:`Your stake: $${fmtNum(stakeAmt)} ${curr}`;
-        }
-    }
+    el.classList.add('sel');document.getElementById('fResult').value=val;
+    document.getElementById('cashField').style.display=val==='Cash Out'?'block':'none';
+    if(val==='Cash Out'){const sv=document.getElementById('fStake').value,h=document.getElementById('cashHint');
+    if(sv&&h){const su=parseFloat(sv.replace(',','.'));const sa=mode==='amount'?su:(su*unit);h.textContent=(lang==='ES'?'Tu stake: $':'Your stake: $')+fmtNum(sa)+' '+curr}}
 }
 
-// ========== PROFIT CALC ==========
 function calcProfit(b){
     if(b.result==='Win')return(b.stake*b.odds)-b.stake;
     if(b.result==='Loss')return-b.stake;
     if(b.result==='Push')return 0;
-    if(b.result==='Cash Out'&&b.cashOutAmount){return(b.cashOutAmount/unit)-b.stake}
+    if(b.result==='Cash Out'&&b.cashOutAmount)return(b.cashOutAmount/unit)-b.stake;
     return 0;
+}
+
+function getTier(stake){
+    if(stake<tierSmall)return'small';
+    if(stake<tierMed)return'medium';
+    return'big';
+}
+function getTierLabel(tier){
+    const labels={small:['🟢 Small','🟢 Chica'],medium:['🟡 Medium','🟡 Media'],big:['🔴 Big','🔴 Grande']};
+    return labels[tier][lang==='ES'?1:0];
+}
+function getTierRange(tier){
+    if(tier==='small')return`< ${tierSmall}u`;
+    if(tier==='medium')return`${tierSmall}u - ${tierMed}u`;
+    return`> ${tierMed}u`;
 }
 
 // ========== BET MANAGEMENT ==========
@@ -562,74 +442,32 @@ function addBet(e){
     e.preventDefault();
     let stake=parseFloat(document.getElementById('fStake').value.replace(',','.'));
     if(mode==='amount')stake=stake/unit;
-
-    const bet={
-        id:editId||Date.now(),
-        bet:document.getElementById('fBet').value,
-        date:document.getElementById('fDate').value,
-        stake:stake,
-        odds:parseFloat(document.getElementById('fOdds').value.replace(',','.')),
-        sport:document.getElementById('fSport').value,
-        type:document.getElementById('fType').value,
-        result:document.getElementById('fResult').value,
-        reason:document.getElementById('fNotes').value,
-        cashOutAmount:document.getElementById('fResult').value==='Cash Out'?parseFloat(document.getElementById('fCash').value):null
-    };
-
+    const bet={id:editId||Date.now(),bet:document.getElementById('fBet').value,date:document.getElementById('fDate').value,stake:stake,odds:parseFloat(document.getElementById('fOdds').value.replace(',','.')),sport:document.getElementById('fSport').value,type:document.getElementById('fType').value,result:document.getElementById('fResult').value,reason:document.getElementById('fNotes').value,cashOutAmount:document.getElementById('fResult').value==='Cash Out'?parseFloat(document.getElementById('fCash').value):null};
     if(editId){bets=bets.map(b=>b.id===editId?bet:b);toast(t('editOk'));editId=null}
     else{bets.push(bet);toast(t('addOk'))}
-
-    save();resetForm();refresh();
-    goTab('historyTab',document.querySelectorAll('.nb')[1]);
+    save();resetForm();refresh();goTab('historyTab',document.querySelectorAll('.nb')[1]);
 }
-
 function editBet(id){
-    const b=bets.find(x=>x.id===id);if(!b)return;
-    editId=id;
-    document.getElementById('fBet').value=b.bet;
-    document.getElementById('fDate').value=b.date;
+    const b=bets.find(x=>x.id===id);if(!b)return;editId=id;
+    document.getElementById('fBet').value=b.bet;document.getElementById('fDate').value=b.date;
     document.getElementById('fStake').value=mode==='amount'?(b.stake*unit).toFixed(0):b.stake;
-    document.getElementById('fOdds').value=b.odds;
-    document.getElementById('fSport').value=b.sport;
-    document.getElementById('fType').value=b.type;
-    document.getElementById('fNotes').value=b.reason||'';
+    document.getElementById('fOdds').value=b.odds;document.getElementById('fSport').value=b.sport;
+    document.getElementById('fType').value=b.type;document.getElementById('fNotes').value=b.reason||'';
     if(b.cashOutAmount)document.getElementById('fCash').value=b.cashOutAmount;
-
-    // Select result button
     document.querySelectorAll('#resultGrid .result-btn').forEach(btn=>btn.classList.remove('sel'));
     const map={'Pending':0,'Win':1,'Loss':2,'Push':3,'Cash Out':4};
     document.querySelectorAll('#resultGrid .result-btn')[map[b.result]||0].classList.add('sel');
     document.getElementById('fResult').value=b.result;
     document.getElementById('cashField').style.display=b.result==='Cash Out'?'block':'none';
-
     document.getElementById('submitBtn').textContent=t('submitEdit');
     goTab('addTab',document.querySelectorAll('.nb')[2]);
 }
-
-function deleteBet(id){
-    if(confirm(t('delAsk'))){bets=bets.filter(b=>b.id!==id);save();refresh();toast(t('delOk'))}
-}
-
-function resetForm(){
-    ['fBet','fDate','fStake','fOdds','fNotes','fCash'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('fResult').value='Pending';
-    document.querySelectorAll('#resultGrid .result-btn').forEach(b=>b.classList.remove('sel'));
-    document.querySelectorAll('#resultGrid .result-btn')[0].classList.add('sel');
-    document.getElementById('cashField').style.display='none';
-    editId=null;
-    document.getElementById('submitBtn').textContent=t('submitAdd');
-}
-
+function deleteBet(id){if(confirm(t('delAsk'))){bets=bets.filter(b=>b.id!==id);save();refresh();toast(t('delOk'))}}
+function resetForm(){['fBet','fDate','fStake','fOdds','fNotes','fCash'].forEach(id=>document.getElementById(id).value='');document.getElementById('fResult').value='Pending';document.querySelectorAll('#resultGrid .result-btn').forEach(b=>b.classList.remove('sel'));document.querySelectorAll('#resultGrid .result-btn')[0].classList.add('sel');document.getElementById('cashField').style.display='none';editId=null;document.getElementById('submitBtn').textContent=t('submitAdd')}
 function save(){ls('btData',JSON.stringify(bets))}
 
 // ========== STATS ==========
-function updateL10Filter(){
-    const sel=document.getElementById('l10Filter');
-    const sports=[...new Set(bets.map(b=>b.sport))];
-    const cur=sel.value;
-    sel.innerHTML='<option value="All">All</option>'+sports.map(s=>`<option value="${s}">${sportLabel(s)}</option>`).join('');
-    sel.value=sports.includes(cur)?cur:'All';
-}
+function updateL10Filter(){const sel=document.getElementById('l10Filter');const sports=[...new Set(bets.map(b=>b.sport))];const cur=sel.value;sel.innerHTML='<option value="All">All</option>'+sports.map(s=>`<option value="${s}">${sportLabel(s)}</option>`).join('');sel.value=sports.includes(cur)?cur:'All'}
 
 function updateStats(){
     const settled=bets.filter(b=>b.result!=='Pending');
@@ -639,88 +477,93 @@ function updateStats(){
 
     let netU=0,wonU=0,lostU=0;
     settled.forEach(b=>{const p=calcProfit(b);if(p>0)wonU+=p;else lostU+=Math.abs(p);netU+=p});
-
     const staked=settled.reduce((s,b)=>s+b.stake,0);
     const roi=staked>0?((netU/staked)*100).toFixed(1):'0';
 
+    // Weighted Win Rate: each bet's "vote" weighted by stake
+    let wwr='0';
+    if(staked>0){
+        let weightedWins=0;
+        settled.forEach(b=>{if(b.result==='Win')weightedWins+=b.stake});
+        wwr=((weightedWins/staked)*100).toFixed(1);
+    }
+
     document.getElementById('sTotalBets').textContent=bets.length;
     document.getElementById('sWinRate').textContent=wr+'%';
+    document.getElementById('sWWR').textContent=t('wwr')+': '+wwr+'%';
     document.getElementById('sWon').textContent=fmtVal(wonU);
     document.getElementById('sLost').textContent=fmtVal(lostU);
     document.getElementById('sRoi').textContent=roi+'%';
+    document.getElementById('sStaked').textContent=fmtVal(staked);
 
     const netEl=document.getElementById('sNet');
     netEl.textContent=fmtSigned(netU);
     netEl.style.color=netU>=0?'var(--win)':'var(--loss)';
 
-    // Pending badge
     const pend=bets.filter(b=>b.result==='Pending').length;
     const badge=document.getElementById('pendBadge');
-    badge.style.display=pend>0?'flex':'none';
-    badge.textContent=pend;
+    badge.style.display=pend>0?'flex':'none';badge.textContent=pend;
+
+    // Tier breakdown in stats
+    renderTierSection(settled);
 
     // Last 10
     updateL10Filter();
     const filterSport=document.getElementById('l10Filter').value;
-    let pool=settled;
-    if(filterSport!=='All')pool=pool.filter(b=>b.sport===filterSport);
+    let pool=settled;if(filterSport!=='All')pool=pool.filter(b=>b.sport===filterSport);
     const last=pool.slice(-10).reverse();
+    if(!last.length){document.getElementById('profitChart').innerHTML=`<div class="empty" style="padding:10px"><span>${t('chartEmpty')}</span></div>`;return}
+    document.getElementById('profitChart').innerHTML=last.map((b,i)=>{const p=calcProfit(b);const c=p>=0?'var(--win)':'var(--loss)';return`<div style="color:${c};font-size:12px;line-height:1.7">${i+1}. ${b.bet}: ${fmtSigned(p)}</div>`}).join('');
+}
 
-    if(last.length===0){
-        document.getElementById('profitChart').innerHTML=`<div class="empty" style="padding:10px"><span>${t('chartEmpty')}</span></div>`;
-        return;
-    }
-    document.getElementById('profitChart').innerHTML=last.map((b,i)=>{
-        const p=calcProfit(b);
-        const c=p>=0?'var(--win)':'var(--loss)';
-        return`<div style="color:${c};font-size:12px;line-height:1.7">${i+1}. ${b.bet}: ${fmtSigned(p)}</div>`;
-    }).join('');
+function renderTierSection(settled){
+    if(!settled.length){document.getElementById('tierSection').innerHTML='';return}
+    const tiers={small:{w:0,n:0,p:0,stk:0},medium:{w:0,n:0,p:0,stk:0},big:{w:0,n:0,p:0,stk:0}};
+    settled.forEach(b=>{const tier=getTier(b.stake);tiers[tier].n++;tiers[tier].stk+=b.stake;tiers[tier].p+=calcProfit(b);if(b.result==='Win')tiers[tier].w++});
+
+    let html='<div class="box"><h3>'+(lang==='ES'?'RENDIMIENTO POR TIER':'PERFORMANCE BY TIER')+'</h3>';
+    ['small','medium','big'].forEach(tier=>{
+        const d=tiers[tier];if(!d.n)return;
+        const wr=((d.w/d.n)*100).toFixed(0);
+        const roi=d.stk>0?((d.p/d.stk)*100).toFixed(1):0;
+        const pc=d.p>=0?'var(--win)':'var(--loss)';
+        const wrc=wr>=55?'var(--win)':wr>=45?'var(--pending)':'var(--loss)';
+        html+=`<div class="tier-card">
+            <div class="tier-head"><span class="tier-name">${getTierLabel(tier)}</span><span class="tier-range">${getTierRange(tier)}</span></div>
+            <div class="tier-stats">
+                <div><div class="tier-stat">Bets</div><div class="tier-val" style="color:var(--text)">${d.n}</div></div>
+                <div><div class="tier-stat">Win%</div><div class="tier-val" style="color:${wrc}">${wr}%</div></div>
+                <div><div class="tier-stat">P/L</div><div class="tier-val" style="color:${pc}">${fmtSigned(d.p)}</div></div>
+                <div><div class="tier-stat">ROI</div><div class="tier-val" style="color:${pc}">${roi}%</div></div>
+            </div>
+        </div>`;
+    });
+    html+='</div>';
+    document.getElementById('tierSection').innerHTML=html;
 }
 
 // ========== HISTORY ==========
-function hFilter(val,btn){
-    hFilterVal=val;
-    document.querySelectorAll('#histFilters .fb').forEach(b=>b.classList.remove('on'));
-    btn.classList.add('on');
-    renderHistory();
-}
-
-function clearDateFilter(){
-    document.getElementById('hDateFrom').value='';
-    document.getElementById('hDateTo').value='';
-    renderHistory();
-}
+function hFilter(val,btn){hFilterVal=val;document.querySelectorAll('#histFilters .fb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderHistory()}
+function clearDateFilter(){document.getElementById('hDateFrom').value='';document.getElementById('hDateTo').value='';renderHistory()}
 
 function renderHistory(){
     const c=document.getElementById('histList');
     let list=hFilterVal==='All'?[...bets]:bets.filter(b=>b.result===hFilterVal);
-
-    // Date filter
-    const fromStr=document.getElementById('hDateFrom').value;
-    const toStr=document.getElementById('hDateTo').value;
-    const fromD=parseDate(fromStr);
-    const toD=parseDate(toStr);
+    const fromD=parseDate(document.getElementById('hDateFrom').value);
+    const toD=parseDate(document.getElementById('hDateTo').value);
     if(fromD)list=list.filter(b=>{const d=parseDate(b.date);return d&&d>=fromD});
     if(toD){toD.setHours(23,59,59);list=list.filter(b=>{const d=parseDate(b.date);return d&&d<=toD})}
-
     list=list.slice().reverse();
-
     if(!list.length){c.innerHTML='<div class="empty"><div class="ei">📭</div><div>No bets</div></div>';return}
 
     c.innerHTML=list.map(b=>{
-        const p=calcProfit(b);
-        const pTxt=b.result==='Pending'?'⏳':fmtSigned(p);
-        const pCls=p<0?'neg':'';
+        const p=calcProfit(b);const pTxt=b.result==='Pending'?'⏳':fmtSigned(p);const pCls=p<0?'neg':'';
         const rc=b.result==='Cash Out'?'cash':b.result==='Push'?'push':b.result.toLowerCase();
         const stk=mode==='amount'?'$'+fmtNum(b.stake*unit):b.stake.toFixed(2)+'u';
-        const potWin=calcProfit({...b,result:'Win'});
-        const potWinTxt=fmtSigned(potWin);
-
+        const potWin=calcProfit({...b,result:'Win'});const potWinTxt=fmtSigned(potWin);
         const isPending=b.result==='Pending';
-
-        // For pending: show potential win + quick settle
-        // For settled: show profit + edit/del
-        const bottomSection=isPending?`
+        const shareBtn=!isPending?`<button class="bs" onclick="shareBet(${b.id})">📤 SHARE</button>`:'';
+        const bottom=isPending?`
             <div class="bc-p" style="color:var(--text2)">Potential: <span style="color:var(--win)">${potWinTxt}</span></div>
             <div class="qs">
                 <button class="qs-w" onclick="quickSettle(${b.id},'Win')">✓ WIN</button>
@@ -733,396 +576,222 @@ function renderHistory(){
                 <button class="be" onclick="editBet(${b.id})">✏️ EDIT</button>
                 <button class="bd" onclick="deleteBet(${b.id})">🗑️ DEL</button>
             </div>
-        `:`
-            <div class="bc-p ${pCls}">${pTxt}</div>
+        `:`<div class="bc-p ${pCls}">${pTxt}</div>
             <div class="bc-a">
                 <button class="be" onclick="editBet(${b.id})">✏️ EDIT</button>
+                ${shareBtn}
                 <button class="bd" onclick="deleteBet(${b.id})">🗑️ DEL</button>
-            </div>
-        `;
+            </div>`;
 
-        return`<div class="bc ${rc}">
+        return`<div class="bc ${rc}" id="bet-${b.id}">
             <div class="bc-h"><div class="bc-d">${b.date}</div><span class="bc-r ${rc}">${b.result}</span></div>
             <div class="bc-n">${b.bet}</div>
-            <div class="bc-det">
-                <div>⚽ ${sportLabel(b.sport)} | 🎲 ${b.type}</div>
-                <div>Stake: ${stk} @ ${b.odds}</div>
-                ${b.reason?`<div>📝 ${b.reason}</div>`:''}
-            </div>
-            ${bottomSection}
+            <div class="bc-det"><div>⚽ ${sportLabel(b.sport)} | 🎲 ${b.type}</div><div>Stake: ${stk} @ ${b.odds}</div>${b.reason?`<div>📝 ${b.reason}</div>`:''}</div>
+            ${bottom}
         </div>`;
     }).join('');
 }
 
-// Quick settle (Win, Loss, Push)
-function quickSettle(id,result){
-    const b=bets.find(x=>x.id===id);if(!b)return;
-    b.result=result;b.cashOutAmount=null;
-    save();refresh();toast(t(result==='Win'?'editOk':'editOk'));
-}
-
-// Show inline cash out input
+function quickSettle(id,result){const b=bets.find(x=>x.id===id);if(!b)return;b.result=result;b.cashOutAmount=null;save();refresh();toast(t('editOk'))}
 function showCashOut(id){
-    const el=document.getElementById('co-'+id);
-    if(!el)return;
+    const el=document.getElementById('co-'+id);if(!el)return;
     const b=bets.find(x=>x.id===id);if(!b)return;
-    const stakeAmount=(b.stake*unit).toFixed(2);
-    const placeholder=mode==='amount'?stakeAmount:b.stake.toFixed(2);
-    const lbl=mode==='amount'?(lang==='ES'?'Monto recibido ($)':'Amount received ($)'):(lang==='ES'?'Monto recibido ($)':'Amount received ($)');
-
+    const sa=(b.stake*unit).toFixed(2);
+    const lbl=lang==='ES'?'Monto recibido ($)':'Amount received ($)';
     el.style.display='block';
-    el.innerHTML=`<div class="co-inline">
-        <label>${lbl}</label>
-        <input type="number" id="co-val-${id}" placeholder="${stakeAmount}" inputmode="decimal" autofocus>
-        <div style="font-size:10px;color:var(--text2);margin:-4px 0 8px">Stake: $${fmtNum(parseFloat(stakeAmount))}</div>
-        <div class="co-btns">
-            <button class="co-confirm" onclick="confirmCashOut(${id})">✓ CONFIRM</button>
-            <button class="co-cancel" onclick="cancelCashOut(${id})">✕</button>
-        </div>
-    </div>`;
+    el.innerHTML=`<div class="co-inline"><label>${lbl}</label><input type="number" id="co-val-${id}" placeholder="${sa}" inputmode="decimal" autofocus><div style="font-size:10px;color:var(--text2);margin:-4px 0 8px">Stake: $${fmtNum(parseFloat(sa))}</div><div class="co-btns"><button class="co-confirm" onclick="confirmCashOut(${id})">✓ CONFIRM</button><button class="co-cancel" onclick="cancelCashOut(${id})">✕</button></div></div>`;
     setTimeout(()=>{const inp=document.getElementById('co-val-'+id);if(inp)inp.focus()},100);
 }
+function confirmCashOut(id){const inp=document.getElementById('co-val-'+id);if(!inp||!inp.value)return;const b=bets.find(x=>x.id===id);if(!b)return;b.result='Cash Out';b.cashOutAmount=parseFloat(inp.value);save();refresh();toast('Cash Out: '+fmtSigned(calcProfit(b)))}
+function cancelCashOut(id){const el=document.getElementById('co-'+id);if(el){el.style.display='none';el.innerHTML=''}}
 
-function confirmCashOut(id){
-    const inp=document.getElementById('co-val-'+id);
-    if(!inp||!inp.value)return;
+// ========== SHARE BET ==========
+async function shareBet(id){
     const b=bets.find(x=>x.id===id);if(!b)return;
-    b.result='Cash Out';
-    b.cashOutAmount=parseFloat(inp.value);
-    save();refresh();
-    const profit=calcProfit(b);
-    toast('Cash Out: '+fmtSigned(profit));
+    const p=calcProfit(b);
+    const rc=b.result==='Cash Out'?'cash':b.result==='Push'?'push':b.result.toLowerCase();
+    const stk=mode==='amount'?'$'+fmtNum(b.stake*unit):b.stake.toFixed(2)+'u';
+    const colors={win:'#00e676',loss:'#ff4444',push:'#448aff',cash:'#aa66ff',pending:'#ffab00'};
+    const bgc={win:'rgba(0,230,118,.15)',loss:'rgba(255,68,68,.15)',push:'rgba(68,138,255,.15)',cash:'rgba(170,102,255,.15)'};
+
+    const container=document.getElementById('shareContainer');
+    container.innerHTML=`<div class="share-card" id="shareCard">
+        <div class="sh-header"><span class="sh-brand">BETTING TRACKER</span><span class="sh-date">${b.date}</span></div>
+        <div class="sh-bet">${b.bet}</div>
+        <div class="sh-details">
+            <div>⚽ ${sportLabel(b.sport)} | 🎲 ${b.type}</div>
+            <div>Stake: ${stk} @ ${b.odds}</div>
+        </div>
+        <div><span class="sh-result" style="background:${bgc[rc]||bgc.push};color:${colors[rc]||'#fff'}">${b.result.toUpperCase()}</span></div>
+        <div class="sh-profit" style="color:${p>=0?colors.win:colors.loss}">${fmtSigned(p)}</div>
+    </div>`;
+
+    try{
+        const canvas=await html2canvas(document.getElementById('shareCard'),{backgroundColor:'#0d0d0d',scale:2});
+        canvas.toBlob(async(blob)=>{
+            if(!blob)return;
+            const file=new File([blob],'bet.png',{type:'image/png'});
+
+            // Try native share first
+            if(navigator.canShare&&navigator.canShare({files:[file]})){
+                try{
+                    await navigator.share({files:[file],title:'Bet',text:`${b.bet} → ${b.result} ${fmtSigned(p)}`});
+                }catch(e){if(e.name!=='AbortError')showShareOverlay(canvas)}
+            }else{
+                showShareOverlay(canvas);
+            }
+        },'image/png');
+    }catch(e){toast('Error generating image');console.error(e)}
 }
 
-function cancelCashOut(id){
-    const el=document.getElementById('co-'+id);
-    if(el){el.style.display='none';el.innerHTML=''}
+function showShareOverlay(canvas){
+    const img=canvas.toDataURL('image/png');
+    const ov=document.createElement('div');
+    ov.className='share-overlay';
+    ov.innerHTML=`<img src="${img}" style="max-width:320px"><div class="so-btns"><button class="so-share" onclick="downloadShareImg(this)">💾 Save</button><button class="so-close" onclick="this.closest('.share-overlay').remove()">✕ Close</button></div>`;
+    document.body.appendChild(ov);
+}
+function downloadShareImg(btn){
+    const img=btn.closest('.share-overlay').querySelector('img');
+    const a=document.createElement('a');a.href=img.src;a.download='bet.png';a.click();
+    btn.closest('.share-overlay').remove();toast('Saved ✓');
 }
 
 // ========== CHARTS ==========
-function chartView(v,btn){
-    chartMode=v;
-    document.querySelectorAll('.ctb').forEach(b=>b.classList.remove('on'));
-    btn.classList.add('on');
-    renderCharts();
-}
-
+function chartView(v,btn){chartMode=v;document.querySelectorAll('.ctb').forEach(b=>b.classList.remove('on'));btn.classList.add('on');renderCharts()}
 function renderCharts(){
     const c=document.getElementById('chartArea');
     const settled=bets.filter(b=>b.result!=='Pending');
     if(!settled.length){c.innerHTML=`<div class="empty"><div class="ei">📊</div><div>${t('chartEmpty')}</div></div>`;return}
     switch(chartMode){
-        case'cumulative':drawCumulative(c,settled);break;
-        case'sport':drawBySport(c,settled);break;
-        case'monthly':drawMonthly(c,settled);break;
-        case'winrate':drawWinRate(c,settled);break;
-        case'odds':drawOdds(c,settled);break;
+        case'cumulative':drawCumulative(c,settled);break;case'sport':drawBySport(c,settled);break;
+        case'monthly':drawMonthly(c,settled);break;case'winrate':drawWinRate(c,settled);break;
+        case'odds':drawOdds(c,settled);break;case'tiers':drawTiers(c,settled);break;
     }
 }
-
-function getVal(units){return mode==='amount'?units*unit:units}
+function getVal(u){return mode==='amount'?u*unit:u}
 function getLabel(v){return mode==='amount'?'$'+fmtNum(v):v.toFixed(2)+'u'}
 
-// -- Cumulative P/L --
 function drawCumulative(c,settled){
     c.innerHTML='<div class="box"><h3>CUMULATIVE P/L</h3><canvas id="cv1"></canvas></div>';
     setTimeout(()=>{
         const can=document.getElementById('cv1');if(!can)return;
-        const ctx=can.getContext('2d');
-        const dpr=window.devicePixelRatio||1;
-        const W=can.parentElement.clientWidth-24;
-        can.width=W*dpr;can.height=200*dpr;can.style.width=W+'px';can.style.height='200px';
-        ctx.scale(dpr,dpr);
-
-        const pad={t:20,r:14,b:28,l:52};
-        const pW=W-pad.l-pad.r,pH=200-pad.t-pad.b;
-
-        let cum=[0];
-        settled.forEach(b=>{cum.push(cum[cum.length-1]+getVal(calcProfit(b)))});
-
-        const mx=Math.max(...cum,0),mn=Math.min(...cum,0);
-        const rng=mx-mn||1;
-
+        const ctx=can.getContext('2d');const dpr=window.devicePixelRatio||1;
+        const W=can.parentElement.clientWidth-24;can.width=W*dpr;can.height=200*dpr;can.style.width=W+'px';can.style.height='200px';ctx.scale(dpr,dpr);
+        const pad={t:20,r:14,b:28,l:52},pW=W-pad.l-pad.r,pH=200-pad.t-pad.b;
+        let cum=[0];settled.forEach(b=>{cum.push(cum[cum.length-1]+getVal(calcProfit(b)))});
+        const mx=Math.max(...cum,0),mn=Math.min(...cum,0),rng=mx-mn||1;
         ctx.fillStyle='#181818';ctx.fillRect(0,0,W,200);
-
-        // Zero line
-        const zY=pad.t+pH*(mx/rng);
-        ctx.strokeStyle='#444';ctx.lineWidth=1;ctx.setLineDash([4,4]);
-        ctx.beginPath();ctx.moveTo(pad.l,zY);ctx.lineTo(W-pad.r,zY);ctx.stroke();ctx.setLineDash([]);
-
-        // Grid + labels
+        const zY=pad.t+pH*(mx/rng);ctx.strokeStyle='#444';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(pad.l,zY);ctx.lineTo(W-pad.r,zY);ctx.stroke();ctx.setLineDash([]);
         ctx.font='9px Courier New';ctx.textAlign='right';
-        for(let i=0;i<=4;i++){
-            const val=mn+(rng/4)*i;
-            const y=pad.t+pH-((pH/4)*i);
-            ctx.fillStyle='#282828';ctx.fillRect(pad.l,y,pW,.5);
-            ctx.fillStyle='#777';
-            ctx.fillText(mode==='amount'?'$'+Math.round(val).toLocaleString():val.toFixed(1),pad.l-4,y+3);
-        }
-
-        // Line
-        if(cum.length>1){
-            ctx.beginPath();
-            cum.forEach((v,i)=>{
-                const x=pad.l+(i/(cum.length-1))*pW;
-                const y=pad.t+pH*((mx-v)/rng);
-                i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
-            });
-            ctx.strokeStyle='#00e676';ctx.lineWidth=2;ctx.stroke();
-
-            // Area fill
-            const lastX=pad.l+pW;
-            const lastY=pad.t+pH*((mx-cum[cum.length-1])/rng);
-            ctx.lineTo(lastX,zY);ctx.lineTo(pad.l,zY);ctx.closePath();
-            const g=ctx.createLinearGradient(0,pad.t,0,200);
-            if(cum[cum.length-1]>=0){g.addColorStop(0,'rgba(0,230,118,.2)');g.addColorStop(1,'rgba(0,230,118,0)')}
-            else{g.addColorStop(0,'rgba(255,68,68,0)');g.addColorStop(1,'rgba(255,68,68,.2)')}
-            ctx.fillStyle=g;ctx.fill();
-
-            // End dot
-            ctx.beginPath();ctx.arc(lastX,lastY,4,0,Math.PI*2);
-            ctx.fillStyle=cum[cum.length-1]>=0?'#00e676':'#ff4444';ctx.fill();
-        }
-
-        // X labels
-        ctx.fillStyle='#777';ctx.textAlign='center';ctx.font='8px Courier New';
-        const step=Math.max(1,Math.floor(settled.length/5));
-        settled.forEach((b,i)=>{
-            if(i%step===0||i===settled.length-1){
-                const x=pad.l+((i+1)/(cum.length-1))*pW;
-                ctx.fillText(b.date.substring(0,5),x,200-6);
-            }
-        });
-
-        // Total label
-        const tot=cum[cum.length-1];
-        ctx.fillStyle=tot>=0?'#00e676':'#ff4444';ctx.font='bold 11px Courier New';ctx.textAlign='right';
-        ctx.fillText(getLabel(tot),W-pad.r,pad.t-4);
+        for(let i=0;i<=4;i++){const val=mn+(rng/4)*i;const y=pad.t+pH-((pH/4)*i);ctx.fillStyle='#282828';ctx.fillRect(pad.l,y,pW,.5);ctx.fillStyle='#777';ctx.fillText(mode==='amount'?'$'+Math.round(val).toLocaleString():val.toFixed(1),pad.l-4,y+3)}
+        if(cum.length>1){ctx.beginPath();cum.forEach((v,i)=>{const x=pad.l+(i/(cum.length-1))*pW;const y=pad.t+pH*((mx-v)/rng);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});ctx.strokeStyle='#00e676';ctx.lineWidth=2;ctx.stroke();
+        const lastX=pad.l+pW,lastY=pad.t+pH*((mx-cum[cum.length-1])/rng);ctx.lineTo(lastX,zY);ctx.lineTo(pad.l,zY);ctx.closePath();
+        const g=ctx.createLinearGradient(0,pad.t,0,200);if(cum[cum.length-1]>=0){g.addColorStop(0,'rgba(0,230,118,.2)');g.addColorStop(1,'rgba(0,230,118,0)')}else{g.addColorStop(0,'rgba(255,68,68,0)');g.addColorStop(1,'rgba(255,68,68,.2)')}ctx.fillStyle=g;ctx.fill();
+        ctx.beginPath();ctx.arc(lastX,lastY,4,0,Math.PI*2);ctx.fillStyle=cum[cum.length-1]>=0?'#00e676':'#ff4444';ctx.fill()}
+        ctx.fillStyle='#777';ctx.textAlign='center';ctx.font='8px Courier New';const step=Math.max(1,Math.floor(settled.length/5));
+        settled.forEach((b,i)=>{if(i%step===0||i===settled.length-1){const x=pad.l+((i+1)/(cum.length-1))*pW;ctx.fillText(b.date.substring(0,5),x,200-6)}});
+        const tot=cum[cum.length-1];ctx.fillStyle=tot>=0?'#00e676':'#ff4444';ctx.font='bold 11px Courier New';ctx.textAlign='right';ctx.fillText(getLabel(tot),W-pad.r,pad.t-4);
     },30);
 }
 
-// -- By Sport --
 function drawBySport(c,settled){
-    const data={};
-    settled.forEach(b=>{
-        if(!data[b.sport])data[b.sport]={w:0,l:0,p:0,n:0,stk:0};
-        data[b.sport].n++;data[b.sport].stk+=b.stake;
-        data[b.sport].p+=calcProfit(b);
-        if(b.result==='Win')data[b.sport].w++;
-        if(b.result==='Loss')data[b.sport].l++;
-    });
-
+    const data={};settled.forEach(b=>{if(!data[b.sport])data[b.sport]={w:0,l:0,p:0,n:0,stk:0};data[b.sport].n++;data[b.sport].stk+=b.stake;data[b.sport].p+=calcProfit(b);if(b.result==='Win')data[b.sport].w++;if(b.result==='Loss')data[b.sport].l++});
     const entries=Object.entries(data).sort((a,b)=>b[1].n-a[1].n);
-
     let html='<div class="box"><h3>'+(lang==='ES'?'POR DEPORTE':'BY SPORT')+'</h3><canvas id="cv2"></canvas>';
-    entries.forEach(([s,d])=>{
-        const wr=d.n>0?((d.w/d.n)*100).toFixed(0):0;
-        const roi=d.stk>0?((d.p/d.stk)*100).toFixed(1):0;
-        const pc=d.p>=0?'var(--win)':'var(--loss)';
-        html+=`<div class="sport-row"><span style="font-weight:bold">${sportLabel(s)}</span>
-        <div class="sr-vals"><span>${d.n}b</span><span>${wr}%</span><span style="color:${pc}">${fmtSigned(d.p)}</span><span style="color:var(--text2)">${roi}%roi</span></div></div>`;
-    });
-    html+='</div>';
-    c.innerHTML=html;
-
-    setTimeout(()=>{
-        const can=document.getElementById('cv2');if(!can)return;
-        const ctx=can.getContext('2d');
-        const dpr=window.devicePixelRatio||1;
-        const W=can.parentElement.clientWidth-24;
-        can.width=W*dpr;can.height=150*dpr;can.style.width=W+'px';can.style.height='150px';
-        ctx.scale(dpr,dpr);
-
-        const pad={t:14,r:8,b:34,l:8};
-        const pW=W-pad.l-pad.r,pH=150-pad.t-pad.b;
-        const bw=Math.min(36,(pW/entries.length)*.6);
-        const gap=(pW-bw*entries.length)/(entries.length+1);
-
-        const vals=entries.map(e=>getVal(e[1].p));
-        const maxAbs=Math.max(...vals.map(Math.abs),0.01);
-
-        ctx.fillStyle='#181818';ctx.fillRect(0,0,W,150);
-
-        const zY=pad.t+pH/2;
-        ctx.strokeStyle='#444';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,zY);ctx.lineTo(W-pad.r,zY);ctx.stroke();
-
-        entries.forEach(([s,d],i)=>{
-            const v=getVal(d.p);
-            const bh=(Math.abs(v)/maxAbs)*(pH/2);
-            const x=pad.l+gap+i*(bw+gap);
-            const y=v>=0?zY-bh:zY;
-
-            ctx.fillStyle=v>=0?'#00e676':'#ff4444';ctx.globalAlpha=.75;
-            ctx.fillRect(x,y,bw,bh);ctx.globalAlpha=1;
-
-            // Value on bar
-            ctx.fillStyle='#ddd';ctx.font='bold 8px Courier New';ctx.textAlign='center';
-            const lbl=mode==='amount'?'$'+Math.abs(Math.round(v)).toLocaleString():Math.abs(v).toFixed(1);
-            ctx.fillText(lbl,x+bw/2,v>=0?y-3:y+bh+9);
-
-            // Sport label
-            ctx.fillStyle='#999';ctx.font='8px Courier New';
-            ctx.fillText(sportLabel(s).substring(0,5),x+bw/2,150-8);
-        });
-    },30);
+    entries.forEach(([s,d])=>{const wr=d.n>0?((d.w/d.n)*100).toFixed(0):0;const roi=d.stk>0?((d.p/d.stk)*100).toFixed(1):0;const pc=d.p>=0?'var(--win)':'var(--loss)';html+=`<div class="sport-row"><span style="font-weight:bold">${sportLabel(s)}</span><div class="sr-vals"><span>${d.n}b</span><span>${wr}%</span><span style="color:${pc}">${fmtSigned(d.p)}</span><span style="color:var(--text2)">${roi}%roi</span></div></div>`});
+    html+='</div>';c.innerHTML=html;
+    setTimeout(()=>{const can=document.getElementById('cv2');if(!can)return;const ctx=can.getContext('2d');const dpr=window.devicePixelRatio||1;const W=can.parentElement.clientWidth-24;can.width=W*dpr;can.height=150*dpr;can.style.width=W+'px';can.style.height='150px';ctx.scale(dpr,dpr);
+    const pad={t:14,r:8,b:34,l:8},pW=W-pad.l-pad.r,pH=150-pad.t-pad.b;const bw=Math.min(36,(pW/entries.length)*.6);const gap=(pW-bw*entries.length)/(entries.length+1);const vals=entries.map(e=>getVal(e[1].p));const maxAbs=Math.max(...vals.map(Math.abs),0.01);
+    ctx.fillStyle='#181818';ctx.fillRect(0,0,W,150);const zY=pad.t+pH/2;ctx.strokeStyle='#444';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad.l,zY);ctx.lineTo(W-pad.r,zY);ctx.stroke();
+    entries.forEach(([s,d],i)=>{const v=getVal(d.p);const bh=(Math.abs(v)/maxAbs)*(pH/2);const x=pad.l+gap+i*(bw+gap);const y=v>=0?zY-bh:zY;ctx.fillStyle=v>=0?'#00e676':'#ff4444';ctx.globalAlpha=.75;ctx.fillRect(x,y,bw,bh);ctx.globalAlpha=1;ctx.fillStyle='#ddd';ctx.font='bold 8px Courier New';ctx.textAlign='center';const lbl=mode==='amount'?'$'+Math.abs(Math.round(v)).toLocaleString():Math.abs(v).toFixed(1);ctx.fillText(lbl,x+bw/2,v>=0?y-3:y+bh+9);ctx.fillStyle='#999';ctx.font='8px Courier New';ctx.fillText(sportLabel(s).substring(0,5),x+bw/2,150-8)})},30);
 }
 
-// -- Monthly --
 function drawMonthly(c,settled){
-    const data={};
-    settled.forEach(b=>{
-        const p=b.date.split('/');
-        if(p.length>=2){
-            const yr=p[2]||'26';
-            const key=p[1]+'/'+yr;
-            if(!data[key])data[key]={p:0,n:0,w:0};
-            data[key].p+=calcProfit(b);data[key].n++;
-            if(b.result==='Win')data[key].w++;
-        }
-    });
-
-    const months=Object.entries(data);
-    if(!months.length){c.innerHTML='<div class="empty"><div class="ei">📅</div><div>No data</div></div>';return}
-
+    const data={};settled.forEach(b=>{const p=b.date.split('/');if(p.length>=2){const yr=p[2]||'26';const key=p[1]+'/'+yr;if(!data[key])data[key]={p:0,n:0,w:0};data[key].p+=calcProfit(b);data[key].n++;if(b.result==='Win')data[key].w++}});
+    const months=Object.entries(data);if(!months.length){c.innerHTML='<div class="empty"><div class="ei">📅</div><div>No data</div></div>';return}
     c.innerHTML='<div class="box"><h3>'+(lang==='ES'?'MENSUAL':'MONTHLY')+'</h3><canvas id="cv3"></canvas></div>';
-
-    setTimeout(()=>{
-        const can=document.getElementById('cv3');if(!can)return;
-        const ctx=can.getContext('2d');
-        const dpr=window.devicePixelRatio||1;
-        const W=can.parentElement.clientWidth-24;
-        can.width=W*dpr;can.height=170*dpr;can.style.width=W+'px';can.style.height='170px';
-        ctx.scale(dpr,dpr);
-
-        const pad={t:18,r:8,b:30,l:44};
-        const pW=W-pad.l-pad.r,pH=170-pad.t-pad.b;
-        const bw=Math.min(36,(pW/months.length)*.6);
-        const gap=(pW-bw*months.length)/(months.length+1);
-
-        const vals=months.map(m=>getVal(m[1].p));
-        const maxAbs=Math.max(...vals.map(Math.abs),0.01);
-
-        ctx.fillStyle='#181818';ctx.fillRect(0,0,W,170);
-
-        const zY=pad.t+pH/2;
-        ctx.strokeStyle='#444';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(pad.l,zY);ctx.lineTo(W-pad.r,zY);ctx.stroke();ctx.setLineDash([]);
-
-        // Y axis
-        ctx.fillStyle='#777';ctx.font='8px Courier New';ctx.textAlign='right';
-        [-maxAbs,-maxAbs/2,0,maxAbs/2,maxAbs].forEach((v,i)=>{
-            const y=pad.t+pH-(pH/4)*i;
-            if(mode==='amount')ctx.fillText('$'+Math.round(v).toLocaleString(),pad.l-3,y+3);
-            else ctx.fillText(v.toFixed(1),pad.l-3,y+3);
-        });
-
-        const mNames=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-        months.forEach(([m,d],i)=>{
-            const v=getVal(d.p);
-            const bh=(Math.abs(v)/maxAbs)*(pH/2);
-            const x=pad.l+gap+i*(bw+gap);
-            const y=v>=0?zY-bh:zY;
-
-            ctx.fillStyle=v>=0?'#00e676':'#ff4444';ctx.globalAlpha=.75;
-            ctx.fillRect(x,y,bw,bh);ctx.globalAlpha=1;
-
-            ctx.fillStyle='#ddd';ctx.font='bold 8px Courier New';ctx.textAlign='center';
-            const lbl=mode==='amount'?'$'+Math.abs(Math.round(v)).toLocaleString():Math.abs(v).toFixed(1);
-            ctx.fillText(lbl,x+bw/2,v>=0?y-3:y+bh+9);
-
-            ctx.fillStyle='#999';ctx.font='8px Courier New';
-            const mi=parseInt(m.split('/')[0]);
-            ctx.fillText(mNames[mi]||m,x+bw/2,170-8);
-        });
-    },30);
+    setTimeout(()=>{const can=document.getElementById('cv3');if(!can)return;const ctx=can.getContext('2d');const dpr=window.devicePixelRatio||1;const W=can.parentElement.clientWidth-24;can.width=W*dpr;can.height=170*dpr;can.style.width=W+'px';can.style.height='170px';ctx.scale(dpr,dpr);
+    const pad={t:18,r:8,b:30,l:44},pW=W-pad.l-pad.r,pH=170-pad.t-pad.b;const bw=Math.min(36,(pW/months.length)*.6);const gap=(pW-bw*months.length)/(months.length+1);const vals=months.map(m=>getVal(m[1].p));const maxAbs=Math.max(...vals.map(Math.abs),0.01);
+    ctx.fillStyle='#181818';ctx.fillRect(0,0,W,170);const zY=pad.t+pH/2;ctx.strokeStyle='#444';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(pad.l,zY);ctx.lineTo(W-pad.r,zY);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='#777';ctx.font='8px Courier New';ctx.textAlign='right';[-maxAbs,-maxAbs/2,0,maxAbs/2,maxAbs].forEach((v,i)=>{const y=pad.t+pH-(pH/4)*i;if(mode==='amount')ctx.fillText('$'+Math.round(v).toLocaleString(),pad.l-3,y+3);else ctx.fillText(v.toFixed(1),pad.l-3,y+3)});
+    const mN=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    months.forEach(([m,d],i)=>{const v=getVal(d.p);const bh=(Math.abs(v)/maxAbs)*(pH/2);const x=pad.l+gap+i*(bw+gap);const y=v>=0?zY-bh:zY;ctx.fillStyle=v>=0?'#00e676':'#ff4444';ctx.globalAlpha=.75;ctx.fillRect(x,y,bw,bh);ctx.globalAlpha=1;ctx.fillStyle='#ddd';ctx.font='bold 8px Courier New';ctx.textAlign='center';const lbl=mode==='amount'?'$'+Math.abs(Math.round(v)).toLocaleString():Math.abs(v).toFixed(1);ctx.fillText(lbl,x+bw/2,v>=0?y-3:y+bh+9);ctx.fillStyle='#999';ctx.font='8px Courier New';const mi=parseInt(m.split('/')[0]);ctx.fillText(mN[mi]||m,x+bw/2,170-8)})},30);
 }
 
-// -- Win Rate by Sport --
 function drawWinRate(c,settled){
-    const data={};
-    settled.forEach(b=>{
-        if(!data[b.sport])data[b.sport]={w:0,n:0};
-        data[b.sport].n++;
-        if(b.result==='Win')data[b.sport].w++;
-    });
-
+    const data={};settled.forEach(b=>{if(!data[b.sport])data[b.sport]={w:0,n:0};data[b.sport].n++;if(b.result==='Win')data[b.sport].w++});
     const entries=Object.entries(data).sort((a,b)=>(b[1].w/b[1].n)-(a[1].w/a[1].n));
-    const totalW=settled.filter(b=>b.result==='Win').length;
-    const totalWR=((totalW/settled.length)*100).toFixed(1);
-
+    const totalW=settled.filter(b=>b.result==='Win').length;const totalWR=((totalW/settled.length)*100).toFixed(1);
     let html='<div class="box"><h3>'+(lang==='ES'?'% VICTORIA POR DEPORTE':'WIN RATE BY SPORT')+'</h3>';
-    entries.forEach(([s,d])=>{
-        const wr=((d.w/d.n)*100).toFixed(0);
-        const col=wr>=55?'var(--win)':wr>=45?'var(--pending)':'var(--loss)';
-        html+=`<div class="prog-wrap">
-            <div class="prog-head"><span style="font-weight:bold">${sportLabel(s)}</span><span style="color:${col}">${wr}% <span style="color:var(--text2)">(${d.w}/${d.n})</span></span></div>
-            <div class="prog-bar"><div class="prog-fill" style="width:${wr}%;background:${col}"></div></div>
-        </div>`;
-    });
-    html+=`<div style="text-align:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
-        <span style="color:var(--text2);font-size:10px">OVERALL: </span>
-        <span style="color:var(--accent);font-weight:bold;font-size:14px">${totalWR}%</span>
-        <span style="color:var(--text2);font-size:10px"> (${totalW}/${settled.length})</span>
-    </div></div>`;
+    entries.forEach(([s,d])=>{const wr=((d.w/d.n)*100).toFixed(0);const col=wr>=55?'var(--win)':wr>=45?'var(--pending)':'var(--loss)';html+=`<div class="prog-wrap"><div class="prog-head"><span style="font-weight:bold">${sportLabel(s)}</span><span style="color:${col}">${wr}% <span style="color:var(--text2)">(${d.w}/${d.n})</span></span></div><div class="prog-bar"><div class="prog-fill" style="width:${wr}%;background:${col}"></div></div></div>`});
+    html+=`<div style="text-align:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)"><span style="color:var(--text2);font-size:10px">OVERALL: </span><span style="color:var(--accent);font-weight:bold;font-size:14px">${totalWR}%</span><span style="color:var(--text2);font-size:10px"> (${totalW}/${settled.length})</span></div></div>`;
     c.innerHTML=html;
 }
 
-// -- Odds Distribution --
 function drawOdds(c,settled){
     const ranges={'1.01-1.50':{w:0,l:0,p:0},'1.51-2.00':{w:0,l:0,p:0},'2.01-2.50':{w:0,l:0,p:0},'2.51-3.50':{w:0,l:0,p:0},'3.51+':{w:0,l:0,p:0}};
-    settled.forEach(b=>{
-        let k;
-        if(b.odds<=1.50)k='1.01-1.50';else if(b.odds<=2.00)k='1.51-2.00';else if(b.odds<=2.50)k='2.01-2.50';else if(b.odds<=3.50)k='2.51-3.50';else k='3.51+';
-        ranges[k].p+=calcProfit(b);
-        if(b.result==='Win')ranges[k].w++;if(b.result==='Loss')ranges[k].l++;
+    settled.forEach(b=>{let k;if(b.odds<=1.50)k='1.01-1.50';else if(b.odds<=2.00)k='1.51-2.00';else if(b.odds<=2.50)k='2.01-2.50';else if(b.odds<=3.50)k='2.51-3.50';else k='3.51+';ranges[k].p+=calcProfit(b);if(b.result==='Win')ranges[k].w++;if(b.result==='Loss')ranges[k].l++});
+    let html='<div class="box"><h3>'+(lang==='ES'?'POR CUOTA':'BY ODDS RANGE')+'</h3>';
+    Object.entries(ranges).forEach(([r,d])=>{const tot=d.w+d.l;if(!tot)return;const wr=((d.w/tot)*100).toFixed(0);const pc=d.p>=0?'var(--win)':'var(--loss)';html+=`<div class="sport-row"><span style="font-weight:bold;font-size:11px">@ ${r}</span><div class="sr-vals"><span>${tot}b</span><span>${wr}%</span><span style="color:${pc}">${fmtSigned(d.p)}</span></div></div>`});
+    html+='</div>';c.innerHTML=html;
+}
+
+// -- TIERS CHART --
+function drawTiers(c,settled){
+    const tiers={small:{w:0,n:0,p:0,stk:0},medium:{w:0,n:0,p:0,stk:0},big:{w:0,n:0,p:0,stk:0}};
+    settled.forEach(b=>{const tier=getTier(b.stake);tiers[tier].n++;tiers[tier].stk+=b.stake;tiers[tier].p+=calcProfit(b);if(b.result==='Win')tiers[tier].w++});
+
+    let html='<div class="box"><h3>'+(lang==='ES'?'ANÁLISIS POR TIER':'TIER ANALYSIS')+'</h3>';
+    ['small','medium','big'].forEach(tier=>{
+        const d=tiers[tier];if(!d.n)return;
+        const wr=((d.w/d.n)*100).toFixed(0);
+        const roi=d.stk>0?((d.p/d.stk)*100).toFixed(1):0;
+        const pc=d.p>=0?'var(--win)':'var(--loss)';
+        const wrc=wr>=55?'var(--win)':wr>=45?'var(--pending)':'var(--loss)';
+        const avgStake=d.stk/d.n;
+
+        html+=`<div class="tier-card">
+            <div class="tier-head"><span class="tier-name">${getTierLabel(tier)}</span><span class="tier-range">${getTierRange(tier)}</span></div>
+            <div class="tier-stats">
+                <div><div class="tier-stat">Bets</div><div class="tier-val" style="color:var(--text)">${d.n}</div></div>
+                <div><div class="tier-stat">Win%</div><div class="tier-val" style="color:${wrc}">${wr}%</div></div>
+                <div><div class="tier-stat">P/L</div><div class="tier-val" style="color:${pc}">${fmtSigned(d.p)}</div></div>
+                <div><div class="tier-stat">ROI</div><div class="tier-val" style="color:${pc}">${roi}%</div></div>
+            </div>
+            <div style="margin-top:6px;font-size:10px;color:var(--text2)">
+                Avg stake: ${fmtVal(avgStake)} | Staked: ${fmtVal(d.stk)}
+            </div>
+            <div class="prog-bar" style="margin-top:4px"><div class="prog-fill" style="width:${wr}%;background:${wrc}"></div></div>
+        </div>`;
     });
 
-    let html='<div class="box"><h3>'+(lang==='ES'?'POR CUOTA':'BY ODDS RANGE')+'</h3>';
-    Object.entries(ranges).forEach(([r,d])=>{
-        const tot=d.w+d.l;if(!tot)return;
-        const wr=((d.w/tot)*100).toFixed(0);
-        const pc=d.p>=0?'var(--win)':'var(--loss)';
-        html+=`<div class="sport-row"><span style="font-weight:bold;font-size:11px">@ ${r}</span>
-        <div class="sr-vals"><span>${tot}b</span><span>${wr}%</span><span style="color:${pc}">${fmtSigned(d.p)}</span></div></div>`;
-    });
-    html+='</div>';
-    c.innerHTML=html;
+    // Comparison summary
+    const active=['small','medium','big'].filter(t=>tiers[t].n>0);
+    if(active.length>1){
+        html+=`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text2)">`;
+        const best=active.reduce((a,b)=>((tiers[a].stk>0?tiers[a].p/tiers[a].stk:0)>(tiers[b].stk>0?tiers[b].p/tiers[b].stk:0))?a:b);
+        html+=`<div>💡 ${lang==='ES'?'Mejor ROI':'Best ROI'}: <strong style="color:var(--accent)">${getTierLabel(best)}</strong></div>`;
+        html+=`</div>`;
+    }
+    html+='</div>';c.innerHTML=html;
 }
 
 // ========== EXPORT / IMPORT ==========
-function exportJSON(){
-    const blob=new Blob([JSON.stringify(bets,null,2)],{type:'application/json'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`bt_${new Date().toISOString().split('T')[0]}.json`;a.click();
-    toast(t('expOk'));
-}
-function exportCSV(){
-    let csv='Date,Bet,Stake(u),Stake($),Odds,Type,Sport,Result,P/L(u),P/L($),Notes\n';
-    bets.forEach(b=>{const p=calcProfit(b);csv+=`${b.date},"${b.bet}",${b.stake.toFixed(2)},${(b.stake*unit).toFixed(2)},${b.odds},${b.type},${b.sport},${b.result},${p.toFixed(2)},${(p*unit).toFixed(2)},"${b.reason||''}"\n`});
-    const blob=new Blob([csv],{type:'text/csv'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`bt_${new Date().toISOString().split('T')[0]}.csv`;a.click();
-    toast(t('expOk'));
-}
-function processImport(){
-    const f=document.getElementById('importFile').files[0];if(!f)return;
-    const r=new FileReader();
-    r.onload=e=>{try{const d=JSON.parse(e.target.result);if(Array.isArray(d)){bets=d;save();refresh();toast(t('impOk'))}}catch(e){toast(t('impErr'))}};
-    r.readAsText(f);
-}
+function exportJSON(){const blob=new Blob([JSON.stringify(bets,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`bt_${new Date().toISOString().split('T')[0]}.json`;a.click();toast(t('expOk'))}
+function exportCSV(){let csv='Date,Bet,Stake(u),Stake($),Odds,Type,Sport,Result,P/L(u),P/L($),Notes\n';bets.forEach(b=>{const p=calcProfit(b);csv+=`${b.date},"${b.bet}",${b.stake.toFixed(2)},${(b.stake*unit).toFixed(2)},${b.odds},${b.type},${b.sport},${b.result},${p.toFixed(2)},${(p*unit).toFixed(2)},"${b.reason||''}"\n`});const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`bt_${new Date().toISOString().split('T')[0]}.csv`;a.click();toast(t('expOk'))}
+function processImport(){const f=document.getElementById('importFile').files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(Array.isArray(d)){bets=d;save();refresh();toast(t('impOk'))}}catch(e){toast(t('impErr'))}};r.readAsText(f)}
 function clearAll(){if(confirm(t('clearAsk'))){bets=[];save();refresh();toast(t('clearOk'))}}
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2000)}
 
 // ========== INIT ==========
 function init(){
-    setupDateInput();
-    populateSports();
-    applyTX();
-    updateStats();
-    renderHistory();
-    updateUnitDisp();
+    setupDateInput();populateSports();applyTX();updateStats();renderHistory();updateUnitDisp();
     document.getElementById('unitInput').value=unit;
+    document.getElementById('tierSmall').value=tierSmall;document.getElementById('tierMed').value=tierMed;
     document.getElementById('modeBtn').textContent=mode==='unit'?'UNIT':'$';
     document.getElementById('modeBtn').classList.toggle('on',mode==='amount');
-    document.getElementById('currBtn').textContent=curr;
-    document.getElementById('unitCurrLabel').textContent=curr;
+    document.getElementById('currBtn').textContent=curr;document.getElementById('unitCurrLabel').textContent=curr;
 }
 init();
 </script>
