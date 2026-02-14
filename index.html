@@ -280,6 +280,7 @@
                 <button class="ctb" onclick="chartView('winrate',this)" data-t="cWR">WIN%</button>
                 <button class="ctb" onclick="chartView('odds',this)" data-t="cOdds">ODDS</button>
                 <button class="ctb" onclick="chartView('tiers',this)">TIERS</button>
+                <button class="ctb" onclick="chartView('types',this)" data-t="cTypes">TYPES</button>
             </div>
             <div id="chartArea"></div>
         </div>
@@ -341,7 +342,7 @@ const TX={
     EN:{sBets:'BETS',sWR:'WIN RATE',sWon:'WON',sLost:'LOST',sNet:'NET',sLast:'RECENT',sStaked:'TOTAL STAKED',
         fBet:'BET',fDate:'DATE',fStake:'STAKE',fOdds:'ODDS',fSport:'SPORT',fType:'TYPE',fResult:'RESULT',fCash:'CASH OUT AMOUNT',fNotes:'NOTES',fToday:'TODAY',
         submitAdd:'⚡ ADD BET',submitEdit:'✏️ UPDATE',
-        cSport:'SPORT',cMonth:'MONTHLY',cWR:'WIN%',cOdds:'ODDS',
+        cSport:'SPORT',cMonth:'MONTHLY',cWR:'WIN%',cOdds:'ODDS',cTypes:'TYPES',
         addOk:'Bet added ✓',editOk:'Updated ✓',delAsk:'Delete this bet?',delOk:'Deleted ✓',
         clearAsk:'Delete ALL data?',clearOk:'Cleared ✓',expOk:'Exported ✓',impOk:'Imported ✓',impErr:'Import error',
         chartEmpty:'Settle bets to see charts',tierDesc:'Stake thresholds (units)',
@@ -349,7 +350,7 @@ const TX={
     ES:{sBets:'APUESTAS',sWR:'% VICTORIA',sWon:'GANADO',sLost:'PERDIDO',sNet:'NETO',sLast:'RECIENTES',sStaked:'TOTAL APOSTADO',
         fBet:'APUESTA',fDate:'FECHA',fStake:'STAKE',fOdds:'CUOTAS',fSport:'DEPORTE',fType:'TIPO',fResult:'RESULTADO',fCash:'MONTO CASH OUT',fNotes:'NOTAS',fToday:'HOY',
         submitAdd:'⚡ AGREGAR',submitEdit:'✏️ ACTUALIZAR',
-        cSport:'DEPORTE',cMonth:'MENSUAL',cWR:'WIN%',cOdds:'CUOTAS',
+        cSport:'DEPORTE',cMonth:'MENSUAL',cWR:'WIN%',cOdds:'CUOTAS',cTypes:'TIPOS',
         addOk:'Agregada ✓',editOk:'Actualizada ✓',delAsk:'¿Eliminar?',delOk:'Eliminada ✓',
         clearAsk:'¿Eliminar TODO?',clearOk:'Eliminado ✓',expOk:'Exportado ✓',impOk:'Importado ✓',impErr:'Error',
         chartEmpty:'Resolvé apuestas para ver gráficos',tierDesc:'Umbrales de stake (unidades)',
@@ -586,6 +587,38 @@ function renderTierSection(settled){
         </div>`;
     });
     html+='</div>';
+
+    // BY TYPE (Single, Parlay, etc)
+    const types={};
+    settled.forEach(b=>{
+        const tp=b.type||'Single';
+        if(!types[tp])types[tp]={w:0,n:0,p:0,stk:0};
+        types[tp].n++;types[tp].stk+=b.stake;types[tp].p+=calcProfit(b);
+        if(b.result==='Win')types[tp].w++;
+    });
+    const typeIcons={Single:'🎯',Parlay:'🔗','Player Prop':'👤',Live:'⚡',Futures:'🔮'};
+    const typeEntries=Object.entries(types).sort((a,b)=>b[1].n-a[1].n);
+    if(typeEntries.length>0){
+        html+='<div class="box"><h3>'+(lang==='ES'?'RENDIMIENTO POR TIPO':'PERFORMANCE BY TYPE')+'</h3>';
+        typeEntries.forEach(([tp,d])=>{
+            const wr=((d.w/d.n)*100).toFixed(0);
+            const roi=d.stk>0?((d.p/d.stk)*100).toFixed(1):0;
+            const pc=d.p>=0?'var(--win)':'var(--loss)';
+            const wrc=wr>=55?'var(--win)':wr>=45?'var(--pending)':'var(--loss)';
+            const icon=typeIcons[tp]||'🎲';
+            html+=`<div class="tier-card">
+                <div class="tier-head"><span class="tier-name">${icon} ${tp}</span><span class="tier-range">${d.n} bets</span></div>
+                <div class="tier-stats">
+                    <div><div class="tier-stat">Bets</div><div class="tier-val" style="color:var(--text)">${d.n}</div></div>
+                    <div><div class="tier-stat">Win%</div><div class="tier-val" style="color:${wrc}">${wr}%</div></div>
+                    <div><div class="tier-stat">P/L</div><div class="tier-val" style="color:${pc}">${fmtSigned(d.p)}</div></div>
+                    <div><div class="tier-stat">ROI</div><div class="tier-val" style="color:${pc}">${roi}%</div></div>
+                </div>
+            </div>`;
+        });
+        html+='</div>';
+    }
+
     document.getElementById('tierSection').innerHTML=html;
 }
 
@@ -609,7 +642,6 @@ function renderHistory(){
         const stk=mode==='amount'?'$'+fmtNum(b.stake*unit):b.stake.toFixed(2)+'u';
         const potWin=calcProfit({...b,result:'Win'});const potWinTxt=fmtSigned(potWin);
         const isPending=b.result==='Pending';
-        const shareBtn=!isPending?`<button class="bs" onclick="shareBet(${b.id})">📤 SHARE</button>`:'';
         const bottom=isPending?`
             <div class="bc-p" style="color:var(--text2)">Potential: <span style="color:var(--win)">${potWinTxt}</span></div>
             <div class="qs">
@@ -621,12 +653,13 @@ function renderHistory(){
             <div id="co-${b.id}" style="display:none"></div>
             <div class="bc-a" style="margin-top:6px">
                 <button class="be" onclick="editBet(${b.id})">✏️ EDIT</button>
+                <button class="bs" onclick="shareBet(${b.id})">📤 SHARE</button>
                 <button class="bd" onclick="deleteBet(${b.id})">🗑️ DEL</button>
             </div>
         `:`<div class="bc-p ${pCls}">${pTxt}</div>
             <div class="bc-a">
                 <button class="be" onclick="editBet(${b.id})">✏️ EDIT</button>
-                ${shareBtn}
+                <button class="bs" onclick="shareBet(${b.id})">📤 SHARE</button>
                 <button class="bd" onclick="deleteBet(${b.id})">🗑️ DEL</button>
             </div>`;
 
@@ -656,10 +689,16 @@ function cancelCashOut(id){const el=document.getElementById('co-'+id);if(el){el.
 async function shareBet(id){
     const b=bets.find(x=>x.id===id);if(!b)return;
     const p=calcProfit(b);
+    const isPending=b.result==='Pending';
+    const potWin=calcProfit({...b,result:'Win'});
     const rc=b.result==='Cash Out'?'cash':b.result==='Push'?'push':b.result.toLowerCase();
     const stk=mode==='amount'?'$'+fmtNum(b.stake*unit):b.stake.toFixed(2)+'u';
     const colors={win:'#00e676',loss:'#ff4444',push:'#448aff',cash:'#aa66ff',pending:'#ffab00'};
-    const bgc={win:'rgba(0,230,118,.15)',loss:'rgba(255,68,68,.15)',push:'rgba(68,138,255,.15)',cash:'rgba(170,102,255,.15)'};
+    const bgc={win:'rgba(0,230,118,.15)',loss:'rgba(255,68,68,.15)',push:'rgba(68,138,255,.15)',cash:'rgba(170,102,255,.15)',pending:'rgba(255,171,0,.15)'};
+
+    const profitLine=isPending
+        ?`<div class="sh-profit" style="color:#ffab00">⏳ Potential: ${fmtSigned(potWin)}</div>`
+        :`<div class="sh-profit" style="color:${p>=0?colors.win:colors.loss}">${fmtSigned(p)}</div>`;
 
     const container=document.getElementById('shareContainer');
     container.innerHTML=`<div class="share-card" id="shareCard">
@@ -670,7 +709,7 @@ async function shareBet(id){
             <div>Stake: ${stk} @ ${b.odds}</div>
         </div>
         <div><span class="sh-result" style="background:${bgc[rc]||bgc.push};color:${colors[rc]||'#fff'}">${b.result.toUpperCase()}</span></div>
-        <div class="sh-profit" style="color:${p>=0?colors.win:colors.loss}">${fmtSigned(p)}</div>
+        ${profitLine}
     </div>`;
 
     try{
@@ -713,7 +752,7 @@ function renderCharts(){
     switch(chartMode){
         case'cumulative':drawCumulative(c,settled);break;case'sport':drawBySport(c,settled);break;
         case'monthly':drawMonthly(c,settled);break;case'winrate':drawWinRate(c,settled);break;
-        case'odds':drawOdds(c,settled);break;case'tiers':drawTiers(c,settled);break;
+        case'odds':drawOdds(c,settled);break;case'tiers':drawTiers(c,settled);break;case'types':drawTypes(c,settled);break;
     }
 }
 function getVal(u){return mode==='amount'?u*unit:u}
@@ -819,6 +858,55 @@ function drawTiers(c,settled){
         html+=`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text2)">`;
         const best=active.reduce((a,b)=>((tiers[a].stk>0?tiers[a].p/tiers[a].stk:0)>(tiers[b].stk>0?tiers[b].p/tiers[b].stk:0))?a:b);
         html+=`<div>💡 ${lang==='ES'?'Mejor ROI':'Best ROI'}: <strong style="color:var(--accent)">${getTierLabel(best)}</strong></div>`;
+        html+=`</div>`;
+    }
+    html+='</div>';c.innerHTML=html;
+}
+
+// -- TYPES CHART --
+function drawTypes(c,settled){
+    const types={};
+    settled.forEach(b=>{
+        const tp=b.type||'Single';
+        if(!types[tp])types[tp]={w:0,n:0,p:0,stk:0};
+        types[tp].n++;types[tp].stk+=b.stake;types[tp].p+=calcProfit(b);
+        if(b.result==='Win')types[tp].w++;
+    });
+    const typeIcons={Single:'🎯',Parlay:'🔗','Player Prop':'👤',Live:'⚡',Futures:'🔮'};
+    const typeEntries=Object.entries(types).sort((a,b)=>b[1].n-a[1].n);
+
+    let html='<div class="box"><h3>'+(lang==='ES'?'ANÁLISIS POR TIPO':'TYPE ANALYSIS')+'</h3>';
+    typeEntries.forEach(([tp,d])=>{
+        const wr=((d.w/d.n)*100).toFixed(0);
+        const roi=d.stk>0?((d.p/d.stk)*100).toFixed(1):0;
+        const pc=d.p>=0?'var(--win)':'var(--loss)';
+        const wrc=wr>=55?'var(--win)':wr>=45?'var(--pending)':'var(--loss)';
+        const icon=typeIcons[tp]||'🎲';
+        const avgOdds=d.n>0?(settled.filter(b=>(b.type||'Single')===tp).reduce((s,b)=>s+b.odds,0)/d.n).toFixed(2):'0';
+        const avgStake=d.stk/d.n;
+
+        html+=`<div class="tier-card">
+            <div class="tier-head"><span class="tier-name">${icon} ${tp}</span><span class="tier-range">${d.n} bets</span></div>
+            <div class="tier-stats">
+                <div><div class="tier-stat">Bets</div><div class="tier-val" style="color:var(--text)">${d.n}</div></div>
+                <div><div class="tier-stat">Win%</div><div class="tier-val" style="color:${wrc}">${wr}%</div></div>
+                <div><div class="tier-stat">P/L</div><div class="tier-val" style="color:${pc}">${fmtSigned(d.p)}</div></div>
+                <div><div class="tier-stat">ROI</div><div class="tier-val" style="color:${pc}">${roi}%</div></div>
+            </div>
+            <div style="margin-top:6px;font-size:10px;color:var(--text2)">
+                Avg stake: ${fmtVal(avgStake)} | Avg odds: ${avgOdds} | Staked: ${fmtVal(d.stk)}
+            </div>
+            <div class="prog-bar" style="margin-top:4px"><div class="prog-fill" style="width:${wr}%;background:${wrc}"></div></div>
+        </div>`;
+    });
+
+    // Best type insight
+    if(typeEntries.length>1){
+        html+=`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--text2)">`;
+        const bestROI=typeEntries.reduce((a,b)=>((types[a[0]].stk>0?types[a[0]].p/types[a[0]].stk:0)>(types[b[0]].stk>0?types[b[0]].p/types[b[0]].stk:0))?a:b);
+        const bestWR=typeEntries.reduce((a,b)=>((types[a[0]].w/types[a[0]].n)>(types[b[0]].w/types[b[0]].n))?a:b);
+        html+=`<div>💡 ${lang==='ES'?'Mejor ROI':'Best ROI'}: <strong style="color:var(--accent)">${typeIcons[bestROI[0]]||'🎲'} ${bestROI[0]}</strong></div>`;
+        if(bestWR[0]!==bestROI[0])html+=`<div>🎯 ${lang==='ES'?'Mejor Win%':'Best Win%'}: <strong style="color:var(--accent)">${typeIcons[bestWR[0]]||'🎲'} ${bestWR[0]}</strong></div>`;
         html+=`</div>`;
     }
     html+='</div>';c.innerHTML=html;
